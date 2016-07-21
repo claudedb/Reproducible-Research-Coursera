@@ -1,0 +1,119 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+## Loading and preprocessing the data
+```{r}
+activity.data<-read.csv('~/Documents/R Programming/Reproducible Research/activity.csv')
+activity.data$date<-as.Date(as.character(activity.data$date),'%Y-%m-%d')
+```
+## What is mean total number of steps taken per day?  
+
+**1. Calculate the total number of steps taken per day**  
+  
+```{r}
+steps.perday<-aggregate(steps~date,activity.data,sum,na.rm=F)
+print(steps.perday)
+```
+  
+**2. Make a histogram of the total number of steps taken each day.**  
+
+```{r}
+hist(steps.perday$steps,breaks=10,main='Total number of steps taken daily',xlab='Number of steps',ylab='Number of Days')
+```  
+  
+**3. Calculate and report the mean and median of the total number of steps taken per day**  
+
+```{r}
+steps.perday.mean<-mean(steps.perday$steps)
+steps.perday.median<-median(steps.perday$steps)
+```  
+  
+**MEAN = **`r format(steps.perday.mean,scientific=F)` (Average number of daily steps)  
+**MEDIAN= **`r steps.perday.median` (Median of the number of daily steps)  
+
+
+## What is the average daily activity pattern?  
+
+**1. Make a time serie plot...**  
+
+```{r}
+steps.interval<-aggregate(steps~interval,activity.data,na.rm=F,mean)
+with(steps.interval,plot(interval,steps,type='l',xlab='Interval',ylab='Number of steps',main='Average number of steps (all days) per interval'))
+max.interval<-steps.interval[which.max(steps.interval$steps),1]
+```
+  
+**2. Which 5-minute interval, on average across all days, contains the maximum number of steps**  
+
+```{r}
+
+max.interval<-steps.interval[which.max(steps.interval$steps),1]
+```
+  
+On average, interval **`r max.interval`** has the most steps with **`r round(max(steps.interval$steps))`** steps  
+  
+
+## Imputing missing values  
+  
+**1. Number of missing values**  
+```{r}
+
+number.NA<-sum(is.na(activity.data))
+mean.NA<-mean(is.na(activity.data))
+```
+  
+There is **`r number.NA`** missing values which represents **`r round(100*mean.NA)` %** of missing values  
+
+**2. Devise a strategy for filling the missing values**  
+
+As suggested in the instruction, I decided to associate all NA values to the mean of that interval.  
+**3. Create a new dataset with missing data filed**  
+
+```{r}
+imputed.activity.data<-merge(activity.data,steps.interval, by='interval')
+NA.steps<-which(is.na(imputed.activity.data$steps.x))
+imputed.activity.data$steps.x[NA.steps]<-round(imputed.activity.data$steps.y[NA.steps])
+imputed.activity.data<-imputed.activity.data[,1:3]
+imputed.daily.steps<-aggregate(steps.x~date,imputed.activity.data,sum)
+```
+  
+**4. Make histogram**  
+
+```{r}
+
+mean.daily.steps<-mean(imputed.daily.steps$steps.x)
+median.daily.steps<-median(imputed.daily.steps$steps.x)
+hist(imputed.daily.steps$steps.x,col='red',breaks=10,main='Total number of steps taken daily (NA replaced by interval mean)',xlab='Number of steps',ylab='Number of Days')
+
+```
+  
+After replacing the the missing values, we realise that the difference is not signigicant. We could've ignored the NA datas.  
+
+MEAN Diff% =(Ignored-Imputed)/Ignored = `r  round(steps.perday.mean-mean.daily.steps)/steps.perday.mean*100 ` %  
+
+MEDIAN Diff% =(Ignored-Imputed)/Ignored = `r round(steps.perday.median-median.daily.steps)/steps.perday.median*100` %  
+  
+  
+## Are there differences in activity patterns between weekdays and weekends?
+  
+**1. Create new Factor variable**  
+
+```{r}
+imputed.activity.data$weekday<-as.factor(weekdays(imputed.activity.data$date))
+weekday.name<-c('Monday','Tuesday','Wednesday','Thursday','Friday')
+imputed.activity.data$weekend<-ifelse(imputed.activity.data$weekday %in% weekday.name,'Weekday','Weekend')
+imputed.interval.mean<-aggregate(steps.x~interval+weekend,imputed.activity.data,mean)
+```
+  
+**2. Panel plot**
+  
+```{r}
+library(lattice)
+with(imputed.interval.mean,xyplot(steps.x~interval|weekend,type='l',ylab='Avg number of steps',xlab='Interval',layout=c(1,2)))
+```
+  
+The pattern is a little different at the steps per interval during the weekend seem more distributed
