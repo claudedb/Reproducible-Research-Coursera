@@ -55,7 +55,7 @@ g<-ggplot(top.injuries[1:5,],aes(EVTYPE,INJURIES))
 g2<-ggplot(top.fatalities[1:10,],aes(EVTYPE,FATALITIES))
 g3<-ggplot(top.damage[1:10,],aes(EVTYPE,DAMAGETOT))
 
-g+geom_bar(stat='identity',col='black',fill='orange',lwd=1)
-g2+geom_bar(stat='identity',col='black',fill='red',lwd=1)
+g+geom_bar(stat='identity',col='black',fill='orange',lwd=1)+theme(axis.text.x=element_text(angle=90,hjust=1))
+g2+geom_bar(stat='identity',col='black',fill='red',lwd=1)+theme(axis.text.x=element_text(angle=90,hjust=1))
 
-g3+geom_bar(stat='identity',col='black', fill='green', lwd=1)
+g3+geom_bar(stat='identity',col='black', fill='green', lwd=1)+theme(axis.text.x=element_text(angle=90,hjust=1))
